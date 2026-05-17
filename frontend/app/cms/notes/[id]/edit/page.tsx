@@ -38,19 +38,16 @@ export default function EditNotePage() {
   }
 
   function handleRemovePhoto(cdnUrl: string) {
-    // Remove all instances of this image from the editor
+    // Remove all instances of this image from the editor content
     if (editorRef.current) {
       const editor = editorRef.current;
-      const { doc } = editor.state;
-      const positions: number[] = [];
-      doc.descendants((node: any, pos: number) => {
-        if (node.type.name === "image" && node.attrs.src === cdnUrl) {
-          positions.push(pos);
-        }
-      });
-      // Delete from end to start so positions don't shift
-      for (let i = positions.length - 1; i >= 0; i--) {
-        editor.chain().focus().deleteRange({ from: positions[i], to: positions[i] + 1 }).run();
+      const currentHtml = editor.getHTML();
+      // Remove img tags with this src (handles various attribute orders)
+      const escaped = cdnUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(`<img[^>]*src=["']${escaped}["'][^>]*\\/?>`, "gi");
+      const newHtml = currentHtml.replace(regex, "");
+      if (newHtml !== currentHtml) {
+        editor.commands.setContent(newHtml);
       }
     }
   }

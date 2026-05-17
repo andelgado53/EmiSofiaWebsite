@@ -37,11 +37,6 @@ export default function NewNotePage() {
     }
   }
 
-  const [titleError, setTitleError] = useState("");
-  const [bodyError, setBodyError] = useState("");
-  const [generalError, setGeneralError] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-
   function validate(status: "draft" | "published"): boolean {
     let valid = true;
     setTitleError("");

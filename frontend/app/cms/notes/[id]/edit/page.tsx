@@ -30,10 +30,9 @@ export default function EditNotePage() {
   const [titleError, setTitleError] = useState("");
   const [bodyError, setBodyError] = useState("");
 
-  function handlePhotoUploaded(cdnUrl: string, position: number) {
+  function handleInsertPhoto(cdnUrl: string, float: "left" | "right") {
     if (editorRef.current) {
-      const floatDir = position === 1 ? "left" : "right";
-      editorRef.current.chain().focus().setImage({ src: cdnUrl, float: floatDir }).run();
+      editorRef.current.chain().focus().setImage({ src: cdnUrl, float }).run();
     }
   }
   const [generalError, setGeneralError] = useState("");
@@ -273,7 +272,7 @@ export default function EditNotePage() {
       </div>
 
       {/* Photos */}
-      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onPhotoUploaded={handlePhotoUploaded} />
+      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onInsertPhoto={handleInsertPhoto} />
 
       {/* Labels */}
       <LabelInput labels={labels} onLabelsChange={setLabels} />

@@ -6,38 +6,44 @@ import { useRouter, usePathname } from "next/navigation";
 export default function CmsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthed, setIsAuthed] = useState(false);
+  
+  // Initialize auth state from localStorage immediately (synchronous check)
+  const [isAuthed, setIsAuthed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem("token");
+  });
 
   // The login page is at /cms exactly — don't guard it
   const isLoginPage = pathname === "/cms";
 
   useEffect(() => {
     if (isLoginPage) {
-      setIsAuthed(true);
       return;
     }
 
     const token = localStorage.getItem("token");
     if (!token) {
+      setIsAuthed(false);
       router.replace("/cms");
     } else {
       setIsAuthed(true);
     }
-  }, [isLoginPage, router]);
+  }, [isLoginPage, pathname, router]);
 
   function handleLogout() {
     localStorage.removeItem("token");
+    setIsAuthed(false);
     router.replace("/cms");
-  }
-
-  // Show nothing while checking auth (prevents flash of protected content)
-  if (!isAuthed) {
-    return null;
   }
 
   // Login page renders without the CMS header
   if (isLoginPage) {
     return <>{children}</>;
+  }
+
+  // Show nothing while checking auth (prevents flash of protected content)
+  if (!isAuthed) {
+    return null;
   }
 
   return (

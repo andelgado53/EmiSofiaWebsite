@@ -11,7 +11,7 @@ interface PhotoData {
 interface PhotoUploadProps {
   photos: PhotoData[];
   onPhotosChange: (photos: PhotoData[]) => void;
-  onPhotoUploaded?: (cdnUrl: string, position: number) => void;
+  onInsertPhoto?: (cdnUrl: string, float: "left" | "right") => void;
 }
 
 interface UploadStatus {
@@ -24,7 +24,7 @@ const MAX_PHOTOS = 2;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
-export default function PhotoUpload({ photos, onPhotosChange, onPhotoUploaded }: PhotoUploadProps) {
+export default function PhotoUpload({ photos, onPhotosChange, onInsertPhoto }: PhotoUploadProps) {
   const [uploadStatuses, setUploadStatuses] = useState<Map<number, UploadStatus>>(new Map());
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,11 +119,6 @@ export default function PhotoUpload({ photos, onPhotosChange, onPhotoUploaded }:
       const newPhoto: PhotoData = { s3_key, cdn_url, position };
       onPhotosChange([...photos, newPhoto]);
 
-      // Notify parent to insert image into editor
-      if (onPhotoUploaded) {
-        onPhotoUploaded(cdn_url, position);
-      }
-
       // Clear the status after a short delay
       setTimeout(() => {
         setUploadStatuses((prev) => {
@@ -174,14 +169,36 @@ export default function PhotoUpload({ photos, onPhotosChange, onPhotoUploaded }:
                   Photo {photo.position}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => handleRemove(index)}
-                className="text-sm text-red-600 hover:text-red-800 font-medium px-2 py-1"
-                aria-label={`Remove photo ${photo.position}`}
-              >
-                Remove
-              </button>
+              <div className="flex items-center gap-2">
+                {onInsertPhoto && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onInsertPhoto(photo.cdn_url, "left")}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-300 rounded"
+                      title="Insert at cursor, float left"
+                    >
+                      ← Insert Left
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onInsertPhoto(photo.cdn_url, "right")}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 border border-blue-300 rounded"
+                      title="Insert at cursor, float right"
+                    >
+                      Insert Right →
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleRemove(index)}
+                  className="text-sm text-red-600 hover:text-red-800 font-medium px-2 py-1"
+                  aria-label={`Remove photo ${photo.position}`}
+                >
+                  Remove
+                </button>
+              </div>
             </li>
           ))}
         </ul>

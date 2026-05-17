@@ -29,11 +29,10 @@ export default function NewNotePage() {
   const [generalError, setGeneralError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  function handlePhotoUploaded(cdnUrl: string, position: number) {
+  function handleInsertPhoto(cdnUrl: string, float: "left" | "right") {
     // Insert the photo into the editor at the current cursor position
     if (editorRef.current) {
-      const floatDir = position === 1 ? "left" : "right";
-      editorRef.current.chain().focus().setImage({ src: cdnUrl, float: floatDir }).run();
+      editorRef.current.chain().focus().setImage({ src: cdnUrl, float }).run();
     }
   }
 
@@ -189,7 +188,7 @@ export default function NewNotePage() {
       </div>
 
       {/* Photos */}
-      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onPhotoUploaded={handlePhotoUploaded} />
+      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onInsertPhoto={handleInsertPhoto} />
 
       {/* Labels */}
       <LabelInput labels={labels} onLabelsChange={setLabels} />

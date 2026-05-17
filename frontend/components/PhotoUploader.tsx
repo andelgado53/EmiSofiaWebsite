@@ -77,12 +77,10 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
 
       const { upload_url, s3_key, cdn_url } = await presignRes.json();
 
-      // Upload file directly to S3 using fetch (same approach as working PhotoUpload component)
+      // Upload file directly to S3 using fetch
       const uploadRes = await fetch(upload_url, {
         method: "PUT",
-        headers: {
-          "Content-Type": file.type,
-        },
+        headers: { "Content-Type": file.type },
         body: file,
       });
 
@@ -99,6 +97,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
       return { s3_key, cdn_url, position };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Upload failed";
+      setErrors((prev) => [...prev, `"${file.name}": ${message}`]);
       setUploadStatuses((prev) => {
         const next = new Map(prev);
         next.set(statusKey, { file, status: "error", error: message });
@@ -144,7 +143,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
     let nextPosition = photos.length + 1;
 
     for (const file of validFiles) {
-      const statusKey = `${Date.now()}-${file.name}`;
+      const statusKey = `${Date.now()}-${file.name}-${Math.random()}`;
       setUploadStatuses((prev) => {
         const next = new Map(prev);
         next.set(statusKey, { file, status: "uploading" });
@@ -165,8 +164,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
     setTimeout(() => {
       setUploadStatuses((prev) => {
         const next = new Map(prev);
-        const entries = Array.from(next.entries());
-        for (const [key, status] of entries) {
+        for (const [key, status] of next.entries()) {
           if (status.status === "done") {
             next.delete(key);
           }
@@ -223,7 +221,6 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
     const [moved] = reordered.splice(dragIndex, 1);
     reordered.splice(dropIndex, 0, moved);
 
-    // Recalculate positions as 1, 2, ..., N
     const updated = reordered.map((photo, i) => ({ ...photo, position: i + 1 }));
     notifyChange(updated);
     setDragIndex(null);
@@ -308,7 +305,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png"
+          accept="image/jpeg,image/png,.jpg,.jpeg,.png"
           multiple
           onChange={handleFileSelect}
           disabled={isMaxPhotos}

@@ -24,7 +24,18 @@ class Settings:
 
     @property
     def CMS_PASSWORD_HASH(self) -> str:
-        return os.environ.get("CMS_PASSWORD_HASH", "")
+        import base64
+        raw = os.environ.get("CMS_PASSWORD_HASH", "")
+        # Support base64-encoded hashes to avoid $ interpretation issues in Docker/Coolify
+        # If the value doesn't start with $2 (bcrypt prefix), try base64 decoding it
+        if raw and not raw.startswith("$2"):
+            try:
+                decoded = base64.b64decode(raw).decode("utf-8")
+                if decoded.startswith("$2"):
+                    return decoded
+            except Exception:
+                pass
+        return raw
 
     @property
     def JWT_SECRET(self) -> str:

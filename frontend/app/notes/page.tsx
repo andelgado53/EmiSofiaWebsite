@@ -58,7 +58,7 @@ export default async function NotesPage() {
         <a
           key={note.id}
           href={`/notes/${note.id}`}
-          className="block rounded-lg border border-gray-200 p-6 hover:border-gray-300 hover:shadow-sm transition-all"
+          className="block rounded-lg border border-amber-200 bg-amber-50/40 p-6 hover:border-amber-300 hover:shadow-sm transition-all"
         >
           <h2 className="text-xl font-semibold text-gray-900">{note.title}</h2>
           <time

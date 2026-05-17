@@ -12,6 +12,8 @@ Requirements: 5.1–5.8, 6.8, 3.1–3.2
 
 from __future__ import annotations
 
+import os
+
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
@@ -75,7 +77,7 @@ def client():
 @pytest.fixture
 def auth_header():
     """Return a valid Authorization header."""
-    with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+    with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
         token = create_access_token(sub="author")
     return {"Authorization": f"Bearer {token}"}
 
@@ -83,8 +85,8 @@ def auth_header():
 @pytest.fixture
 def settings_patch():
     """Context manager that patches all settings needed for integration tests."""
-    with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET), \
-         patch.object(settings, "CMS_PASSWORD_HASH", TEST_PASSWORD_HASH):
+    with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}), \
+         patch.dict(os.environ, {"CMS_PASSWORD_HASH": TEST_PASSWORD_HASH}):
         yield
 
 
@@ -98,8 +100,8 @@ class TestAuthIntegration:
 
     def test_login_success_returns_jwt(self, client):
         """Valid password returns a JWT that can be used on CMS endpoints."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET), \
-             patch.object(settings, "CMS_PASSWORD_HASH", TEST_PASSWORD_HASH):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}), \
+             patch.dict(os.environ, {"CMS_PASSWORD_HASH": TEST_PASSWORD_HASH}):
             # Login
             resp = client.post(
                 "/api/cms/auth/login",
@@ -111,7 +113,7 @@ class TestAuthIntegration:
         assert data["token_type"] == "bearer"
 
         # Use the token to access a CMS endpoint
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             cms_resp = client.get(
                 "/api/cms/notes",
                 headers={"Authorization": f"Bearer {data['access_token']}"},
@@ -120,8 +122,8 @@ class TestAuthIntegration:
 
     def test_login_wrong_password(self, client):
         """Wrong password returns 401."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET), \
-             patch.object(settings, "CMS_PASSWORD_HASH", TEST_PASSWORD_HASH):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}), \
+             patch.dict(os.environ, {"CMS_PASSWORD_HASH": TEST_PASSWORD_HASH}):
             resp = client.post(
                 "/api/cms/auth/login",
                 json={"password": "wrong-password"},
@@ -139,7 +141,7 @@ class TestAuthIntegration:
 
     def test_expired_token_rejected(self, client):
         """An expired JWT is rejected with 401."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             expired_token = create_access_token(
                 sub="author", expires_delta=timedelta(seconds=-10)
             )
@@ -151,7 +153,7 @@ class TestAuthIntegration:
 
     def test_invalid_token_string_rejected(self, client):
         """A garbage token string is rejected."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.get(
                 "/api/cms/notes",
                 headers={"Authorization": "Bearer not.a.valid.jwt.token"},
@@ -167,7 +169,7 @@ class TestAuthIntegration:
             "wrong-secret",
             algorithm=ALGORITHM,
         )
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.get(
                 "/api/cms/notes",
                 headers={"Authorization": f"Bearer {wrong_token}"},
@@ -185,7 +187,7 @@ class TestCrudLifecycle:
 
     def test_full_note_lifecycle(self, client, auth_header):
         """End-to-end: create draft, publish, edit, verify public, delete."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Step 1: Create a draft note
             create_resp = client.post(
                 "/api/cms/notes",
@@ -278,7 +280,7 @@ class TestCrudLifecycle:
 
     def test_create_note_with_photos_and_labels(self, client, auth_header):
         """Create a note with photos and labels, verify all data persists."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.post(
                 "/api/cms/notes",
                 json={
@@ -319,7 +321,7 @@ class TestCrudLifecycle:
 
     def test_multiple_notes_crud(self, client, auth_header):
         """Create multiple notes, verify list, delete one, verify list again."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Create 3 published notes
             ids = []
             for i in range(3):
@@ -367,12 +369,12 @@ class TestPhotoPresignIntegration:
 
     def test_presign_jpeg_accepted(self, client, auth_header):
         """image/jpeg content type returns a presigned URL."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "cdn.test.com"), \
-             patch.object(settings, "AWS_ACCESS_KEY_ID", "fake-key"), \
-             patch.object(settings, "AWS_SECRET_ACCESS_KEY", "fake-secret"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET,
+                                     "S3_BUCKET": "test-bucket",
+                                     "CLOUDFRONT_DOMAIN": "cdn.test.com",
+                                     "AWS_ACCESS_KEY_ID": "fake-key",
+                                     "AWS_SECRET_ACCESS_KEY": "fake-secret",
+                                     "AWS_REGION": "us-east-1"}), \
              patch("app.routers.cms_photos.boto3") as mock_boto3:
             mock_s3 = MagicMock()
             mock_boto3.client.return_value = mock_s3
@@ -394,12 +396,12 @@ class TestPhotoPresignIntegration:
 
     def test_presign_png_accepted(self, client, auth_header):
         """image/png content type returns a presigned URL."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "cdn.test.com"), \
-             patch.object(settings, "AWS_ACCESS_KEY_ID", "fake-key"), \
-             patch.object(settings, "AWS_SECRET_ACCESS_KEY", "fake-secret"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET,
+                                     "S3_BUCKET": "test-bucket",
+                                     "CLOUDFRONT_DOMAIN": "cdn.test.com",
+                                     "AWS_ACCESS_KEY_ID": "fake-key",
+                                     "AWS_SECRET_ACCESS_KEY": "fake-secret",
+                                     "AWS_REGION": "us-east-1"}), \
              patch("app.routers.cms_photos.boto3") as mock_boto3:
             mock_s3 = MagicMock()
             mock_boto3.client.return_value = mock_s3
@@ -416,7 +418,7 @@ class TestPhotoPresignIntegration:
 
     def test_presign_invalid_content_type_rejected(self, client, auth_header):
         """Non-JPEG/PNG content types are rejected with 400."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "doc.pdf", "content_type": "application/pdf"},
@@ -426,7 +428,7 @@ class TestPhotoPresignIntegration:
 
     def test_presign_gif_rejected(self, client, auth_header):
         """image/gif is not accepted."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "anim.gif", "content_type": "image/gif"},
@@ -444,7 +446,7 @@ class TestPhotoPresignIntegration:
 
     def test_note_rejects_third_photo(self, client, auth_header):
         """A note cannot have more than 2 photos (validated by schema)."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             resp = client.post(
                 "/api/cms/notes",
                 json={
@@ -476,7 +478,7 @@ class TestPhotoPresignIntegration:
         self, client, auth_header
     ):
         """Updating a note to have 3 photos is rejected."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Create note with 2 photos
             create_resp = client.post(
                 "/api/cms/notes",
@@ -538,7 +540,7 @@ class TestPublicApiIntegration:
 
     def test_drafts_not_visible_in_public_list(self, client, auth_header):
         """Draft notes do not appear in the public note list."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             client.post(
                 "/api/cms/notes",
                 json={
@@ -555,7 +557,7 @@ class TestPublicApiIntegration:
 
     def test_published_notes_visible_in_public_list(self, client, auth_header):
         """Published notes appear in the public note list."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             client.post(
                 "/api/cms/notes",
                 json={
@@ -572,7 +574,7 @@ class TestPublicApiIntegration:
 
     def test_draft_not_accessible_by_id_in_public_api(self, client, auth_header):
         """Draft notes return 404 on the public detail endpoint."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             create_resp = client.post(
                 "/api/cms/notes",
                 json={
@@ -588,7 +590,7 @@ class TestPublicApiIntegration:
 
     def test_public_list_ordered_by_published_at_desc(self, client, auth_header):
         """Public list returns notes ordered by published_at descending."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Create notes with explicit published_at to control order
             client.post(
                 "/api/cms/notes",
@@ -628,7 +630,7 @@ class TestPublicApiIntegration:
 
     def test_public_list_mixed_drafts_and_published(self, client, auth_header):
         """Only published notes appear even when drafts exist."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             client.post(
                 "/api/cms/notes",
                 json={
@@ -678,7 +680,7 @@ class TestPublicApiIntegration:
 
     def test_public_detail_includes_excerpt_and_labels(self, client, auth_header):
         """Public list items include excerpt and labels."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             client.post(
                 "/api/cms/notes",
                 json={
@@ -699,7 +701,7 @@ class TestPublicApiIntegration:
 
     def test_public_pagination(self, client, auth_header):
         """Public list supports pagination."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             for i in range(5):
                 client.post(
                     "/api/cms/notes",
@@ -742,7 +744,7 @@ class TestIsrRevalidationFlow:
         frontend would call revalidate → public page shows the note.
         We verify the backend side of this contract.
         """
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Create as draft
             create_resp = client.post(
                 "/api/cms/notes",
@@ -778,7 +780,7 @@ class TestIsrRevalidationFlow:
 
     def test_edit_published_note_reflects_immediately(self, client, auth_header):
         """Editing a published note is immediately reflected in public API."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             # Create and publish
             create_resp = client.post(
                 "/api/cms/notes",
@@ -809,7 +811,7 @@ class TestIsrRevalidationFlow:
 
     def test_delete_published_note_removes_immediately(self, client, auth_header):
         """Deleting a published note removes it from public API immediately."""
-        with patch.object(settings, "JWT_SECRET", TEST_JWT_SECRET):
+        with patch.dict(os.environ, {"JWT_SECRET": TEST_JWT_SECRET}):
             create_resp = client.post(
                 "/api/cms/notes",
                 json={

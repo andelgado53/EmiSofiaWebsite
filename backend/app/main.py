@@ -8,7 +8,9 @@ from app.database import Base, engine
 from app.routers import auth as auth_router
 from app.routers import cms_notes as cms_notes_router
 from app.routers import cms_photos as cms_photos_router
+from app.routers import cms_trips as cms_trips_router
 from app.routers import public as public_router
+from app.routers import public_trips as public_trips_router
 
 
 @asynccontextmanager
@@ -33,7 +35,9 @@ app.add_middleware(
 app.include_router(auth_router.router)
 app.include_router(cms_notes_router.router)
 app.include_router(cms_photos_router.router)
+app.include_router(cms_trips_router.router)
 app.include_router(public_router.router)
+app.include_router(public_trips_router.router)
 
 
 @app.get("/health")

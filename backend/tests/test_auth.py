@@ -29,20 +29,20 @@ from app.config import settings
 
 class TestCreateAccessToken:
     def test_returns_valid_jwt_string(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             token = create_access_token(sub="author")
         assert isinstance(token, str)
         assert len(token) > 0
 
     def test_payload_contains_sub_and_exp(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             token = create_access_token(sub="author")
         payload = jwt.decode(token, "test-secret", algorithms=[ALGORITHM])
         assert payload["sub"] == "author"
         assert "exp" in payload
 
     def test_custom_expires_delta(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             token = create_access_token(sub="author", expires_delta=timedelta(hours=1))
         payload = jwt.decode(token, "test-secret", algorithms=[ALGORITHM])
         assert payload["sub"] == "author"
@@ -61,19 +61,19 @@ class TestCreateAccessToken:
 
 class TestVerifyToken:
     def test_valid_token_returns_payload(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             token = create_access_token(sub="author")
             payload = verify_token(token)
         assert payload["sub"] == "author"
 
     def test_invalid_token_raises_401(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             with pytest.raises(HTTPException) as exc_info:
                 verify_token("invalid.token.string")
         assert exc_info.value.status_code == 401
 
     def test_expired_token_raises_401(self):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             token = create_access_token(
                 sub="author", expires_delta=timedelta(seconds=-1)
             )
@@ -85,7 +85,7 @@ class TestVerifyToken:
         # Manually create a token without 'sub'
         payload = {"exp": 9999999999}
         token = jwt.encode(payload, "test-secret", algorithm=ALGORITHM)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             with pytest.raises(HTTPException) as exc_info:
                 verify_token(token)
         assert exc_info.value.status_code == 401
@@ -94,7 +94,7 @@ class TestVerifyToken:
         token = jwt.encode(
             {"sub": "author", "exp": 9999999999}, "other-secret", algorithm=ALGORITHM
         )
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             with pytest.raises(HTTPException) as exc_info:
                 verify_token(token)
         assert exc_info.value.status_code == 401
@@ -143,9 +143,7 @@ class TestLoginEndpoint:
         ).decode("utf-8")
 
     def test_login_success(self, client, password_hash):
-        with patch.object(settings, "CMS_PASSWORD_HASH", password_hash), patch.object(
-            settings, "JWT_SECRET", "test-secret"
-        ):
+        with patch.dict(os.environ, {"CMS_PASSWORD_HASH": password_hash, "JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/auth/login", json={"password": "test-password"}
             )
@@ -155,9 +153,7 @@ class TestLoginEndpoint:
         assert data["token_type"] == "bearer"
 
     def test_login_wrong_password(self, client, password_hash):
-        with patch.object(settings, "CMS_PASSWORD_HASH", password_hash), patch.object(
-            settings, "JWT_SECRET", "test-secret"
-        ):
+        with patch.dict(os.environ, {"CMS_PASSWORD_HASH": password_hash, "JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/auth/login", json={"password": "wrong-password"}
             )
@@ -165,18 +161,14 @@ class TestLoginEndpoint:
         assert response.json()["detail"] == "Invalid credentials"
 
     def test_login_no_hash_configured(self, client):
-        with patch.object(settings, "CMS_PASSWORD_HASH", ""), patch.object(
-            settings, "JWT_SECRET", "test-secret"
-        ):
+        with patch.dict(os.environ, {"CMS_PASSWORD_HASH": "", "JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/auth/login", json={"password": "any-password"}
             )
         assert response.status_code == 401
 
     def test_login_returns_valid_jwt(self, client, password_hash):
-        with patch.object(settings, "CMS_PASSWORD_HASH", password_hash), patch.object(
-            settings, "JWT_SECRET", "test-secret"
-        ):
+        with patch.dict(os.environ, {"CMS_PASSWORD_HASH": password_hash, "JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/auth/login", json={"password": "test-password"}
             )

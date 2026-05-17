@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -21,7 +23,7 @@ def client():
 @pytest.fixture
 def auth_header():
     """Generate a valid Authorization header for CMS requests."""
-    with patch.object(settings, "JWT_SECRET", "test-secret"):
+    with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
         token = create_access_token(sub="author")
     return {"Authorization": f"Bearer {token}"}
 
@@ -43,10 +45,10 @@ class TestPresignEndpoint:
     """Tests for POST /api/cms/photos/presign."""
 
     def test_presign_jpeg_success(self, client, auth_header, mock_s3):
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "d1234.cloudfront.net"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}), \
+             patch.dict(os.environ, {"CLOUDFRONT_DOMAIN": "d1234.cloudfront.net"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "photo.jpg", "content_type": "image/jpeg"},
@@ -65,10 +67,10 @@ class TestPresignEndpoint:
         assert data["cdn_url"].startswith("https://d1234.cloudfront.net/photos/")
 
     def test_presign_png_success(self, client, auth_header, mock_s3):
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "d1234.cloudfront.net"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}), \
+             patch.dict(os.environ, {"CLOUDFRONT_DOMAIN": "d1234.cloudfront.net"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "photo.png", "content_type": "image/png"},
@@ -81,7 +83,7 @@ class TestPresignEndpoint:
         assert data["cdn_url"].startswith("https://d1234.cloudfront.net/photos/")
 
     def test_presign_invalid_content_type_returns_400(self, client, auth_header):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "doc.pdf", "content_type": "application/pdf"},
@@ -92,7 +94,7 @@ class TestPresignEndpoint:
         assert "jpeg" in response.json()["detail"].lower() or "png" in response.json()["detail"].lower()
 
     def test_presign_image_gif_returns_400(self, client, auth_header):
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "anim.gif", "content_type": "image/gif"},
@@ -112,7 +114,7 @@ class TestPresignEndpoint:
 
     def test_presign_invalid_token_returns_401(self, client):
         """Requests with an invalid JWT should be rejected with 401."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "photo.jpg", "content_type": "image/jpeg"},
@@ -127,10 +129,10 @@ class TestPresignEndpoint:
 
         current_year = datetime.now(timezone.utc).year
 
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "d1234.cloudfront.net"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}), \
+             patch.dict(os.environ, {"CLOUDFRONT_DOMAIN": "d1234.cloudfront.net"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "photo.jpg", "content_type": "image/jpeg"},
@@ -144,10 +146,10 @@ class TestPresignEndpoint:
 
     def test_presign_calls_boto3_with_correct_params(self, client, auth_header, mock_s3):
         """Verify boto3 is called with correct parameters."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"), \
-             patch.object(settings, "CLOUDFRONT_DOMAIN", "d1234.cloudfront.net"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}), \
+             patch.dict(os.environ, {"CLOUDFRONT_DOMAIN": "d1234.cloudfront.net"}):
             response = client.post(
                 "/api/cms/photos/presign",
                 json={"filename": "photo.jpg", "content_type": "image/jpeg"},
@@ -170,9 +172,9 @@ class TestDeletePhotoEndpoint:
 
     def test_delete_photo_success(self, client, auth_header, mock_s3):
         """Deleting a photo returns 204 and calls S3 delete_object."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}):
             response = client.delete(
                 "/api/cms/photos/photos/2024/abc123.jpg",
                 headers=auth_header,
@@ -185,9 +187,9 @@ class TestDeletePhotoEndpoint:
 
     def test_delete_photo_url_decodes_key(self, client, auth_header, mock_s3):
         """URL-encoded characters in the key are decoded before calling S3."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"), \
-             patch.object(settings, "S3_BUCKET", "test-bucket"), \
-             patch.object(settings, "AWS_REGION", "us-east-1"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}), \
+             patch.dict(os.environ, {"S3_BUCKET": "test-bucket"}), \
+             patch.dict(os.environ, {"AWS_REGION": "us-east-1"}):
             response = client.delete(
                 "/api/cms/photos/photos/2024/my%20photo%20file.jpg",
                 headers=auth_header,
@@ -205,7 +207,7 @@ class TestDeletePhotoEndpoint:
 
     def test_delete_photo_invalid_token_returns_401(self, client):
         """Requests with an invalid JWT should be rejected with 401."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.delete(
                 "/api/cms/photos/photos/2024/abc123.jpg",
                 headers={"Authorization": "Bearer invalid-token"},

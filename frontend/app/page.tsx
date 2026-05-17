@@ -24,10 +24,15 @@ export default function HomePage() {
           <p className="text-sm text-gray-400 mt-1">Coming soon</p>
         </div>
 
-        <div className="block p-4 rounded-lg border border-emerald-200 bg-emerald-50">
-          <h2 className="text-lg font-semibold text-gray-400">Family Trips</h2>
-          <p className="text-sm text-gray-400 mt-1">Coming soon</p>
-        </div>
+        <Link
+          href="/trips"
+          className="block p-4 rounded-lg border border-emerald-200 bg-emerald-50 hover:border-emerald-300 hover:shadow-sm transition-all"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Family Trips</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Photos and memories from our family adventures
+          </p>
+        </Link>
       </div>
     </div>
   );

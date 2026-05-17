@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from unittest.mock import patch
 
 import pytest
@@ -56,7 +57,7 @@ def client():
 @pytest.fixture
 def auth_header():
     """Return a valid Authorization header for CMS endpoints."""
-    with patch.object(settings, "JWT_SECRET", "test-secret"):
+    with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
         token = create_access_token(sub="author")
     return {"Authorization": f"Bearer {token}"}
 
@@ -69,7 +70,7 @@ def auth_header():
 class TestCreateNote:
     def test_create_minimal_draft(self, client, auth_header):
         """Create a draft note with just title and body."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -89,7 +90,7 @@ class TestCreateNote:
 
     def test_create_published_note_sets_published_at(self, client, auth_header):
         """When status is 'published' and published_at is null, set it to now."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -107,7 +108,7 @@ class TestCreateNote:
         self, client, auth_header
     ):
         """When published_at is explicitly provided, use it."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -124,7 +125,7 @@ class TestCreateNote:
 
     def test_create_note_with_labels(self, client, auth_header):
         """Labels are normalised and associated with the note."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -144,7 +145,7 @@ class TestCreateNote:
 
     def test_create_note_with_photos(self, client, auth_header):
         """Photos are created and returned in position order."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -174,7 +175,7 @@ class TestCreateNote:
 
     def test_create_note_sanitises_html(self, client, auth_header):
         """Dangerous HTML tags are stripped from body_html."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -201,7 +202,7 @@ class TestCreateNote:
 
     def test_create_note_rejects_invalid_title(self, client, auth_header):
         """Empty title is rejected with 422."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.post(
                 "/api/cms/notes",
                 json={
@@ -214,7 +215,7 @@ class TestCreateNote:
 
     def test_label_upsert_reuses_existing_labels(self, client, auth_header):
         """Creating two notes with the same label reuses the Label record."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             # Create first note with label "life"
             client.post(
                 "/api/cms/notes",
@@ -252,14 +253,14 @@ class TestCreateNote:
 class TestListNotes:
     def test_list_notes_empty(self, client, auth_header):
         """Returns an empty list when no notes exist."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.get("/api/cms/notes", headers=auth_header)
         assert response.status_code == 200
         assert response.json() == []
 
     def test_list_notes_includes_drafts_and_published(self, client, auth_header):
         """Both draft and published notes are returned."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             # Create a draft
             client.post(
                 "/api/cms/notes",
@@ -287,7 +288,7 @@ class TestListNotes:
 
     def test_list_notes_ordered_by_created_at_desc(self, client, auth_header):
         """Notes are returned newest first (by created_at)."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             client.post(
                 "/api/cms/notes",
                 json={"title": "First", "body_html": "<p>1</p>"},
@@ -317,7 +318,7 @@ class TestListNotes:
 
     def test_list_notes_includes_labels_and_photos(self, client, auth_header):
         """Response includes labels and photos for each note."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             client.post(
                 "/api/cms/notes",
                 json={
@@ -351,7 +352,7 @@ class TestListNotes:
 class TestGetNote:
     def test_get_draft_note(self, client, auth_header):
         """Can retrieve a draft note by ID."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             create_resp = client.post(
                 "/api/cms/notes",
                 json={"title": "My Draft", "body_html": "<p>Draft body</p>"},
@@ -368,7 +369,7 @@ class TestGetNote:
 
     def test_get_published_note(self, client, auth_header):
         """Can retrieve a published note by ID."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             create_resp = client.post(
                 "/api/cms/notes",
                 json={
@@ -388,7 +389,7 @@ class TestGetNote:
 
     def test_get_note_not_found(self, client, auth_header):
         """Returns 404 for a non-existent note ID."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.get("/api/cms/notes/9999", headers=auth_header)
         assert response.status_code == 404
 
@@ -399,7 +400,7 @@ class TestGetNote:
 
     def test_get_note_includes_all_fields(self, client, auth_header):
         """Response includes labels, photos, status, and published_at."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             create_resp = client.post(
                 "/api/cms/notes",
                 json={
@@ -442,7 +443,7 @@ class TestUpdateNote:
         """Helper to create a note and return its ID."""
         payload = {"title": "Original", "body_html": "<p>Original body</p>"}
         payload.update(kwargs)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             resp = client.post("/api/cms/notes", json=payload, headers=auth_header)
         assert resp.status_code == 201
         return resp.json()["id"]
@@ -450,7 +451,7 @@ class TestUpdateNote:
     def test_update_title(self, client, auth_header):
         """Updating only the title leaves other fields unchanged."""
         note_id = self._create_note(client, auth_header)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"title": "Updated Title"},
@@ -464,7 +465,7 @@ class TestUpdateNote:
     def test_update_body_html_sanitises(self, client, auth_header):
         """body_html is sanitised on update."""
         note_id = self._create_note(client, auth_header)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"body_html": '<p>Safe</p><script>alert("xss")</script>'},
@@ -480,7 +481,7 @@ class TestUpdateNote:
         note_id = self._create_note(
             client, auth_header, labels=["old-label", "another"]
         )
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"labels": ["new-label"]},
@@ -494,7 +495,7 @@ class TestUpdateNote:
     def test_update_labels_empty_list_removes_all(self, client, auth_header):
         """Providing an empty labels list removes all labels."""
         note_id = self._create_note(client, auth_header, labels=["tag1", "tag2"])
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"labels": []},
@@ -517,7 +518,7 @@ class TestUpdateNote:
                 }
             ],
         )
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={
@@ -540,7 +541,7 @@ class TestUpdateNote:
     def test_update_draft_to_published_sets_published_at(self, client, auth_header):
         """Transitioning from draft to published sets published_at automatically."""
         note_id = self._create_note(client, auth_header)  # default is draft
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"status": "published"},
@@ -554,7 +555,7 @@ class TestUpdateNote:
     def test_update_published_note_preserves_published_at(self, client, auth_header):
         """Updating a published note without changing status preserves published_at."""
         note_id = self._create_note(client, auth_header, status="published")
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             get_resp = client.get(f"/api/cms/notes/{note_id}", headers=auth_header)
             original_published_at = get_resp.json()["published_at"]
 
@@ -569,7 +570,7 @@ class TestUpdateNote:
 
     def test_update_not_found(self, client, auth_header):
         """Returns 404 for a non-existent note ID."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 "/api/cms/notes/9999",
                 json={"title": "Nope"},
@@ -588,7 +589,7 @@ class TestUpdateNote:
     def test_update_labels_normalises_and_deduplicates(self, client, auth_header):
         """Labels are normalised and deduplicated on update."""
         note_id = self._create_note(client, auth_header)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"labels": ["Life", " LIFE ", "lessons"]},
@@ -604,7 +605,7 @@ class TestUpdateNote:
     def test_update_omitted_labels_preserves_existing(self, client, auth_header):
         """When labels is not provided (None), existing labels are preserved."""
         note_id = self._create_note(client, auth_header, labels=["keep-me"])
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.put(
                 f"/api/cms/notes/{note_id}",
                 json={"title": "New title only"},
@@ -626,7 +627,7 @@ class TestDeleteNote:
         """Helper to create a note and return its ID."""
         payload = {"title": "To Delete", "body_html": "<p>Body</p>"}
         payload.update(kwargs)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             resp = client.post("/api/cms/notes", json=payload, headers=auth_header)
         assert resp.status_code == 201
         return resp.json()["id"]
@@ -634,14 +635,14 @@ class TestDeleteNote:
     def test_delete_note_returns_204(self, client, auth_header):
         """Deleting an existing note returns 204 No Content."""
         note_id = self._create_note(client, auth_header)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.delete(f"/api/cms/notes/{note_id}", headers=auth_header)
         assert response.status_code == 204
 
     def test_delete_note_removes_from_db(self, client, auth_header):
         """After deletion, the note is no longer retrievable."""
         note_id = self._create_note(client, auth_header)
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             client.delete(f"/api/cms/notes/{note_id}", headers=auth_header)
             response = client.get(f"/api/cms/notes/{note_id}", headers=auth_header)
         assert response.status_code == 404
@@ -649,7 +650,7 @@ class TestDeleteNote:
     def test_delete_note_cascades_labels(self, client, auth_header):
         """Deleting a note removes its NoteLabel associations."""
         note_id = self._create_note(client, auth_header, labels=["tag1", "tag2"])
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             client.delete(f"/api/cms/notes/{note_id}", headers=auth_header)
 
         # Verify NoteLabel rows are gone
@@ -671,7 +672,7 @@ class TestDeleteNote:
                 }
             ],
         )
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             client.delete(f"/api/cms/notes/{note_id}", headers=auth_header)
 
         # Verify Photo rows are gone
@@ -682,7 +683,7 @@ class TestDeleteNote:
 
     def test_delete_note_not_found(self, client, auth_header):
         """Returns 404 for a non-existent note ID."""
-        with patch.object(settings, "JWT_SECRET", "test-secret"):
+        with patch.dict(os.environ, {"JWT_SECRET": "test-secret"}):
             response = client.delete("/api/cms/notes/9999", headers=auth_header)
         assert response.status_code == 404
 

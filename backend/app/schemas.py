@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -157,3 +157,114 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
+
+
+# ---------------------------------------------------------------------------
+# Trip nested schemas
+# ---------------------------------------------------------------------------
+
+
+class TripPhotoIn(BaseModel):
+    """CMS input schema for a trip photo reference (after S3 upload)."""
+
+    s3_key: str
+    cdn_url: str
+    position: int = Field(ge=1, le=20)
+
+
+class TripPhotoOut(BaseModel):
+    """Public representation of a photo attached to a trip."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    cdn_url: str
+    position: int
+
+
+class CmsTripPhotoOut(BaseModel):
+    """CMS representation of a trip photo (includes s3_key for edit forms)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    s3_key: str
+    cdn_url: str
+    position: int
+
+
+# ---------------------------------------------------------------------------
+# Trip public response schemas
+# ---------------------------------------------------------------------------
+
+
+class TripListItem(BaseModel):
+    """Compact trip representation used in paginated list responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    trip_date: date
+    cover_photo_url: str | None = None
+
+
+class TripDetail(BaseModel):
+    """Full trip representation returned by the single-trip public endpoint."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    trip_date: date
+    description: str | None = None
+    photos: list[TripPhotoOut]
+
+
+class CmsTripDetail(BaseModel):
+    """Full trip representation for CMS endpoints (includes drafts)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    trip_date: date
+    description: str | None = None
+    status: str
+    published_at: datetime | None = None
+    photos: list[CmsTripPhotoOut]
+
+
+class PaginatedTrips(BaseModel):
+    """Wrapper for paginated trip list responses."""
+
+    total: int
+    page: int
+    page_size: int
+    items: list[TripListItem]
+
+
+# ---------------------------------------------------------------------------
+# Trip CMS request schemas
+# ---------------------------------------------------------------------------
+
+
+class TripCreate(BaseModel):
+    """Payload for creating a new trip via the CMS."""
+
+    title: str = Field(min_length=1, max_length=150)
+    trip_date: date
+    description: str | None = Field(default=None, max_length=2000)
+    status: Literal["draft", "published"] = "draft"
+    photos: list[TripPhotoIn] = Field(default=[], max_length=20)
+
+
+class TripUpdate(BaseModel):
+    """Payload for updating an existing trip via the CMS.
+
+    All fields are optional; only supplied fields are applied.
+    """
+
+    title: str | None = Field(default=None, min_length=1, max_length=150)
+    trip_date: date | None = None
+    description: str | None = Field(default=None, max_length=2000)
+    status: Literal["draft", "published"] | None = None
+    photos: list[TripPhotoIn] | None = Field(default=None, max_length=20)

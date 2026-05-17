@@ -15,26 +15,29 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-sky-50 text-gray-900">
-        <nav className="border-b border-gray-200 px-6 py-4 flex items-center gap-8">
+        <nav className="bg-white/80 backdrop-blur-sm border-b border-sky-100 px-6 py-4 flex items-center gap-8 sticky top-0 z-40 shadow-sm">
           <Link
             href="/"
-            className="text-xl font-semibold text-gray-900 hover:text-gray-700"
+            className="text-xl font-bold bg-gradient-to-r from-sky-600 to-indigo-500 bg-clip-text text-transparent hover:from-sky-500 hover:to-indigo-400 transition-all"
           >
-            Emi Sofia
+            🎵 Emi Sofia
           </Link>
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-5 text-sm">
             <Link
               href="/notes"
-              className="text-gray-600 hover:text-gray-900 font-medium"
+              className="text-amber-700 hover:text-amber-900 font-medium px-2.5 py-1 rounded-full hover:bg-amber-50 transition-colors"
             >
               Notes for Emi
             </Link>
-            <span className="text-gray-300 cursor-default" title="Coming soon">
+            <span className="text-gray-300 cursor-default px-2.5 py-1" title="Coming soon">
               Emi&apos;s Art
             </span>
-            <span className="text-gray-300 cursor-default" title="Coming soon">
+            <Link
+              href="/trips"
+              className="text-emerald-700 hover:text-emerald-900 font-medium px-2.5 py-1 rounded-full hover:bg-emerald-50 transition-colors"
+            >
               Family Trips
-            </span>
+            </Link>
           </div>
         </nav>
         <main className="mx-auto max-w-3xl px-6 py-8">{children}</main>

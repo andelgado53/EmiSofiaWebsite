@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import NoteEditor from "../../../../components/NoteEditor";
 import PhotoUpload from "../../../../components/PhotoUpload";
 import LabelInput from "../../../../components/LabelInput";
@@ -119,12 +120,12 @@ export default function NewNotePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">New Note</h1>
-        <a
+        <Link
           href="/cms/notes"
           className="text-sm text-gray-600 hover:text-gray-900"
         >
           ← Back to notes
-        </a>
+        </Link>
       </div>
 
       {/* General error */}

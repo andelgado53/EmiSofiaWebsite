@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
 import NoteEditor from "../../../../../components/NoteEditor";
 import PhotoUpload from "../../../../../components/PhotoUpload";
 import LabelInput from "../../../../../components/LabelInput";
@@ -188,12 +189,12 @@ export default function EditNotePage() {
           <p className="text-gray-700 text-lg">Note not found</p>
         </div>
         <div className="text-center">
-          <a
+          <Link
             href="/cms/notes"
             className="text-sm text-blue-600 hover:text-blue-800"
           >
             ← Back to notes
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -203,12 +204,12 @@ export default function EditNotePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Edit Note</h1>
-        <a
+        <Link
           href="/cms/notes"
           className="text-sm text-gray-600 hover:text-gray-900"
         >
           ← Back to notes
-        </a>
+        </Link>
       </div>
 
       {/* General error */}

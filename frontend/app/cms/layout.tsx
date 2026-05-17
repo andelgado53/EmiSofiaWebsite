@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function CmsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -51,12 +52,12 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
       <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <nav className="flex items-center gap-4">
           <span className="text-lg font-semibold text-gray-800">CMS</span>
-          <a
+          <Link
             href="/cms/notes"
             className="text-sm text-gray-600 hover:text-gray-900"
           >
             Notes
-          </a>
+          </Link>
         </nav>
         <button
           onClick={handleLogout}

@@ -164,7 +164,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
     setTimeout(() => {
       setUploadStatuses((prev) => {
         const next = new Map(prev);
-        for (const [key, status] of next.entries()) {
+        for (const [key, status] of Array.from(next.entries())) {
           if (status.status === "done") {
             next.delete(key);
           }

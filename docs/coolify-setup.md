@@ -16,19 +16,55 @@ Once connected, Coolify can pull source code and build Docker images directly fr
 
 ## 2. Create the Backend Service
 
-1. Go to **Projects** → select your project (or create one) → **Add New Resource**.
-2. Choose **Docker** → **Dockerfile** as the build method.
-3. Select the connected GitHub repository and branch (e.g. `main`).
-4. Configure the build:
-   - **Build context**: `./backend`
-   - **Dockerfile path**: `./backend/Dockerfile`
-5. Set the **exposed port** to `8000`.
-6. Under **Storages** (or Persistent Volumes), add a volume:
-   - **Mount path in container**: `/data`
-   - Let Coolify manage the host path (it will create a named volume under `/data/coolify/volumes/`)
-   - This volume persists the SQLite database (`/data/emisofia.db`) across container rebuilds and restarts.
+### Step 2a: Add a new resource
 
-> **Important**: The backend expects the database at `/data/emisofia.db`. The volume must be mounted at `/data`, not at the file path itself.
+1. Go to **Projects** in the left sidebar.
+2. Click on your project (or click **+ Add** to create one — name it something like "Emi Sofia").
+3. Inside the project, click **+ Add New Resource**.
+4. You'll see a list of resource types. Select **Public Repository** (if your repo is public) or **Private Repository (with GitHub App)** if it's private.
+5. If prompted, select the GitHub source you connected in step 1.
+6. Pick the repository (e.g. `EmiSofiaWebsite`) and the branch (`main`).
+
+### Step 2b: Configure the build
+
+After selecting the repo, Coolify will ask how to build it:
+
+1. For **Build Pack**, select **Dockerfile**.
+2. Set these fields:
+   - **Base Directory**: `/backend` — this tells Coolify the Dockerfile and source code live in the `backend/` subdirectory of the repo.
+   - **Dockerfile Location**: `/backend/Dockerfile` — path to the Dockerfile relative to the repo root.
+   - **Port Exposes**: `8000` — the port your FastAPI app listens on inside the container.
+3. Give the resource a name like `emisofia-backend` so it's easy to identify.
+
+### Step 2c: Add a persistent volume for the database
+
+The Storages option is only available **after** the resource has been created. You won't see it during the initial setup wizard.
+
+1. First, complete the initial resource creation (steps 2a and 2b) and do an initial deploy.
+2. Once the resource exists, go to its detail page.
+3. Look for the **Storages** tab in the resource's settings (left sidebar or top navigation tabs).
+4. Click **+ Add** to create a new volume mount.
+5. Fill in:
+   - **Name**: `emisofia-db` (or any descriptive name)
+   - **Destination Path**: `/data` — this is the path inside the container where the volume is mounted. The app creates `emisofia.db` inside this directory.
+   - **Source Path**: Leave blank to let Coolify manage it automatically (it creates a directory under `/data/coolify/volumes/`). Or specify a custom host path if you prefer.
+6. Save and **redeploy** the resource — Coolify will recreate the container with the volume mounted.
+
+> **Why `/data` and not `/data/emisofia.db`?** Docker volumes mount at directory level, not file level. The app writes to `/data/emisofia.db` inside the container, and the volume ensures the entire `/data` directory persists.
+
+### Step 2d: Set environment variables
+
+Go to the resource's **Environment Variables** tab and add each variable (see Section 5 below for the full list). The critical ones for the backend to start:
+
+- `CMS_PASSWORD_HASH` — without this, login won't work
+- `JWT_SECRET` — without this, token signing/verification fails
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `S3_BUCKET`, `CLOUDFRONT_DOMAIN` — needed for photo uploads
+
+### Step 2e: Deploy
+
+1. Click **Deploy** (or it may auto-deploy if you enabled webhooks).
+2. Watch the build logs — Coolify will pull the repo, build the Docker image from `backend/Dockerfile`, and start the container.
+3. Once running, the backend is accessible internally on port 8000. Coolify's Traefik proxy will route external traffic to it based on the domain rules you set up in Section 4.
 
 ---
 

@@ -20,6 +20,15 @@ SQLALCHEMY_DATABASE_URL = os.environ.get(
     "DATABASE_URL", "sqlite:////data/emisofia.db"
 )
 
+# Ensure the database directory exists (handles first boot before volume is attached)
+_db_url = SQLALCHEMY_DATABASE_URL
+if _db_url.startswith("sqlite:///"):
+    _db_path = _db_url.replace("sqlite:///", "", 1)
+    # Absolute paths start with / after stripping sqlite:///
+    # Relative paths (like ./emisofia.db) work as-is
+    _db_dir = os.path.dirname(os.path.abspath(_db_path))
+    os.makedirs(_db_dir, exist_ok=True)
+
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},

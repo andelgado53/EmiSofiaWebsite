@@ -1,0 +1,34 @@
+import Link from "next/link";
+
+export default function HomePage() {
+  return (
+    <div className="py-12 text-center space-y-8">
+      <h1 className="text-4xl font-bold text-gray-900">Emi Sofia</h1>
+      <p className="text-lg text-gray-600 max-w-md mx-auto">
+        A place for notes, art, adventures, and everything in between.
+      </p>
+
+      <div className="grid gap-4 max-w-sm mx-auto">
+        <Link
+          href="/notes"
+          className="block p-4 rounded-lg border border-amber-200 bg-amber-50 hover:border-amber-300 hover:shadow-sm transition-all"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Notes for Emi</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Thoughts, lessons, and reflections from dad
+          </p>
+        </Link>
+
+        <div className="block p-4 rounded-lg border border-violet-200 bg-violet-50">
+          <h2 className="text-lg font-semibold text-gray-400">Emi&apos;s Art</h2>
+          <p className="text-sm text-gray-400 mt-1">Coming soon</p>
+        </div>
+
+        <div className="block p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+          <h2 className="text-lg font-semibold text-gray-400">Family Trips</h2>
+          <p className="text-sm text-gray-400 mt-1">Coming soon</p>
+        </div>
+      </div>
+    </div>
+  );
+}

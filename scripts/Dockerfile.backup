@@ -1,0 +1,14 @@
+FROM alpine:3.20
+
+# Install sqlite and AWS CLI
+RUN apk add --no-cache sqlite aws-cli
+
+# Copy the backup script
+COPY backup.sh /usr/local/bin/backup.sh
+RUN chmod +x /usr/local/bin/backup.sh
+
+# Set up cron to run daily at 3 AM UTC
+RUN echo "0 3 * * * /usr/local/bin/backup.sh >> /var/log/backup.log 2>&1" \
+    | crontab -
+
+CMD ["crond", "-f", "-l", "2"]

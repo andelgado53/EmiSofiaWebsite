@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.note-photo {
+  max-width: 40%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.note-photo--float-left {
+  float: left;
+  margin: 0 1.5rem 1rem 0;
+}
+
+.note-photo--float-right {
+  float: right;
+  margin: 0 0 1rem 1.5rem;
+}
+
+.note-body::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+@media (max-width: 640px) {
+  .note-photo {
+    float: none;
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+}

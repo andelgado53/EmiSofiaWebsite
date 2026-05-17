@@ -7,32 +7,28 @@ import Link from "next/link";
 export default function CmsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
 
   // The login page is at /cms exactly — don't guard it
   const isLoginPage = pathname === "/cms";
 
+  // Read token synchronously on every render to avoid stale state
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    // Check auth on mount and whenever we return to a non-login page
-    if (isLoginPage) {
-      setIsChecking(false);
-      return;
-    }
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isLoginPage) return;
 
     const token = localStorage.getItem("token");
-    if (token) {
-      setIsAuthed(true);
-    } else {
-      setIsAuthed(false);
+    if (!token) {
       router.replace("/cms");
     }
-    setIsChecking(false);
-  }, [isLoginPage, router]);
+  }, [mounted, isLoginPage, pathname, router]);
 
   function handleLogout() {
     localStorage.removeItem("token");
-    setIsAuthed(false);
     router.replace("/cms");
   }
 
@@ -41,8 +37,14 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // Show nothing while checking auth (prevents flash of protected content)
-  if (isChecking || !isAuthed) {
+  // Don't render until mounted (avoids SSR hydration mismatch)
+  if (!mounted) {
+    return null;
+  }
+
+  // Check token on every render (synchronous read)
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (!token) {
     return null;
   }
 

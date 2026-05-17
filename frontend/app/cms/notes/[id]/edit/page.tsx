@@ -36,6 +36,24 @@ export default function EditNotePage() {
       editorRef.current.chain().focus().setImage({ src: cdnUrl, float }).run();
     }
   }
+
+  function handleRemovePhoto(cdnUrl: string) {
+    // Remove all instances of this image from the editor
+    if (editorRef.current) {
+      const editor = editorRef.current;
+      const { doc } = editor.state;
+      const positions: number[] = [];
+      doc.descendants((node: any, pos: number) => {
+        if (node.type.name === "image" && node.attrs.src === cdnUrl) {
+          positions.push(pos);
+        }
+      });
+      // Delete from end to start so positions don't shift
+      for (let i = positions.length - 1; i >= 0; i--) {
+        editor.chain().focus().deleteRange({ from: positions[i], to: positions[i] + 1 }).run();
+      }
+    }
+  }
   const [generalError, setGeneralError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -273,7 +291,7 @@ export default function EditNotePage() {
       </div>
 
       {/* Photos */}
-      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onInsertPhoto={handleInsertPhoto} />
+      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onInsertPhoto={handleInsertPhoto} onRemovePhoto={handleRemovePhoto} />
 
       {/* Labels */}
       <LabelInput labels={labels} onLabelsChange={setLabels} />

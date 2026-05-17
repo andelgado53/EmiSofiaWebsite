@@ -12,6 +12,7 @@ interface PhotoUploadProps {
   photos: PhotoData[];
   onPhotosChange: (photos: PhotoData[]) => void;
   onInsertPhoto?: (cdnUrl: string, float: "left" | "right") => void;
+  onRemovePhoto?: (cdnUrl: string) => void;
 }
 
 interface UploadStatus {
@@ -24,7 +25,7 @@ const MAX_PHOTOS = 2;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
-export default function PhotoUpload({ photos, onPhotosChange, onInsertPhoto }: PhotoUploadProps) {
+export default function PhotoUpload({ photos, onPhotosChange, onInsertPhoto, onRemovePhoto }: PhotoUploadProps) {
   const [uploadStatuses, setUploadStatuses] = useState<Map<number, UploadStatus>>(new Map());
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,10 +139,15 @@ export default function PhotoUpload({ photos, onPhotosChange, onInsertPhoto }: P
   }
 
   function handleRemove(index: number) {
+    const removedPhoto = photos[index];
     const updated = photos
       .filter((_, i) => i !== index)
       .map((photo, i) => ({ ...photo, position: i + 1 }));
     onPhotosChange(updated);
+    // Also remove the image from the editor if callback provided
+    if (onRemovePhoto && removedPhoto) {
+      onRemovePhoto(removedPhoto.cdn_url);
+    }
     setError("");
   }
 

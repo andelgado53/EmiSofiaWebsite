@@ -7,29 +7,28 @@ import Link from "next/link";
 export default function CmsLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  
-  // Initialize auth state from localStorage immediately (synchronous check)
-  const [isAuthed, setIsAuthed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return !!localStorage.getItem("token");
-  });
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   // The login page is at /cms exactly — don't guard it
   const isLoginPage = pathname === "/cms";
 
   useEffect(() => {
+    // Check auth on mount and whenever we return to a non-login page
     if (isLoginPage) {
+      setIsChecking(false);
       return;
     }
 
     const token = localStorage.getItem("token");
-    if (!token) {
+    if (token) {
+      setIsAuthed(true);
+    } else {
       setIsAuthed(false);
       router.replace("/cms");
-    } else {
-      setIsAuthed(true);
     }
-  }, [isLoginPage, pathname, router]);
+    setIsChecking(false);
+  }, [isLoginPage, router]);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -43,7 +42,7 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
   }
 
   // Show nothing while checking auth (prevents flash of protected content)
-  if (!isAuthed) {
+  if (isChecking || !isAuthed) {
     return null;
   }
 

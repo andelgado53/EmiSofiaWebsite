@@ -16,7 +16,6 @@ interface PhotoUploaderProps {
 
 interface UploadStatus {
   file: File;
-  progress: number; // 0-100
   status: "uploading" | "done" | "error";
   error?: string;
 }
@@ -78,41 +77,22 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
 
       const { upload_url, s3_key, cdn_url } = await presignRes.json();
 
-      // Upload file directly to S3 with progress tracking via XMLHttpRequest
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("PUT", upload_url);
-        xhr.setRequestHeader("Content-Type", file.type);
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            setUploadStatuses((prev) => {
-              const next = new Map(prev);
-              const existing = next.get(statusKey);
-              if (existing) {
-                next.set(statusKey, { ...existing, progress: percent });
-              }
-              return next;
-            });
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve();
-          } else {
-            reject(new Error("Failed to upload photo to storage"));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.send(file);
+      // Upload file directly to S3 using fetch (same approach as working PhotoUpload component)
+      const uploadRes = await fetch(upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
       });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload photo to storage");
+      }
 
       setUploadStatuses((prev) => {
         const next = new Map(prev);
-        next.set(statusKey, { file, progress: 100, status: "done" });
+        next.set(statusKey, { file, status: "done" });
         return next;
       });
 
@@ -121,7 +101,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
       const message = err instanceof Error ? err.message : "Upload failed";
       setUploadStatuses((prev) => {
         const next = new Map(prev);
-        next.set(statusKey, { file, progress: 0, status: "error", error: message });
+        next.set(statusKey, { file, status: "error", error: message });
         return next;
       });
       return null;
@@ -167,7 +147,7 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
       const statusKey = `${Date.now()}-${file.name}`;
       setUploadStatuses((prev) => {
         const next = new Map(prev);
-        next.set(statusKey, { file, progress: 0, status: "uploading" });
+        next.set(statusKey, { file, status: "uploading" });
         return next;
       });
       uploadPromises.push(uploadFile(file, nextPosition, statusKey));
@@ -308,20 +288,9 @@ export default function PhotoUploader({ photos, onChange, onPhotosChange }: Phot
           {Array.from(uploadStatuses.entries()).map(([key, status]) => (
             <li key={key} className="text-sm">
               {status.status === "uploading" && (
-                <div className="flex items-center gap-2">
-                  <span className="text-blue-600 truncate max-w-[200px]">
-                    {status.file.name}
-                  </span>
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 transition-all duration-200"
-                      style={{ width: `${status.progress}%` }}
-                    />
-                  </div>
-                  <span className="text-gray-500 text-xs w-10 text-right">
-                    {status.progress}%
-                  </span>
-                </div>
+                <span className="text-blue-600">
+                  Uploading {status.file.name}...
+                </span>
               )}
               {status.status === "done" && (
                 <span className="text-green-600">✓ {status.file.name} uploaded</span>

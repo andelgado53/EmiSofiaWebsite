@@ -11,6 +11,7 @@ interface PhotoData {
 interface PhotoUploadProps {
   photos: PhotoData[];
   onPhotosChange: (photos: PhotoData[]) => void;
+  onPhotoUploaded?: (cdnUrl: string, position: number) => void;
 }
 
 interface UploadStatus {
@@ -23,7 +24,7 @@ const MAX_PHOTOS = 2;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
-export default function PhotoUpload({ photos, onPhotosChange }: PhotoUploadProps) {
+export default function PhotoUpload({ photos, onPhotosChange, onPhotoUploaded }: PhotoUploadProps) {
   const [uploadStatuses, setUploadStatuses] = useState<Map<number, UploadStatus>>(new Map());
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -117,6 +118,11 @@ export default function PhotoUpload({ photos, onPhotosChange }: PhotoUploadProps
       // Add photo to parent form state
       const newPhoto: PhotoData = { s3_key, cdn_url, position };
       onPhotosChange([...photos, newPhoto]);
+
+      // Notify parent to insert image into editor
+      if (onPhotoUploaded) {
+        onPhotoUploaded(cdn_url, position);
+      }
 
       // Clear the status after a short delay
       setTimeout(() => {

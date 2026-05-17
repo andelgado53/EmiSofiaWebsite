@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import NoteEditor from "../../../../../components/NoteEditor";
 import PhotoUpload from "../../../../../components/PhotoUpload";
@@ -19,6 +19,7 @@ export default function EditNotePage() {
   const router = useRouter();
   const params = useParams();
   const noteId = params.id as string;
+  const editorRef = useRef<any>(null);
 
   const [title, setTitle] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
@@ -28,6 +29,13 @@ export default function EditNotePage() {
 
   const [titleError, setTitleError] = useState("");
   const [bodyError, setBodyError] = useState("");
+
+  function handlePhotoUploaded(cdnUrl: string, position: number) {
+    if (editorRef.current) {
+      const floatDir = position === 1 ? "left" : "right";
+      editorRef.current.chain().focus().setImage({ src: cdnUrl, float: floatDir }).run();
+    }
+  }
   const [generalError, setGeneralError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -247,7 +255,7 @@ export default function EditNotePage() {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Body
         </label>
-        <NoteEditor content={bodyHtml} onChange={setBodyHtml} />
+        <NoteEditor content={bodyHtml} onChange={setBodyHtml} onEditorReady={(editor) => { editorRef.current = editor; }} />
         <div className="flex justify-between mt-1">
           {bodyError ? (
             <p role="alert" className="text-sm text-red-600">{bodyError}</p>
@@ -265,7 +273,7 @@ export default function EditNotePage() {
       </div>
 
       {/* Photos */}
-      <PhotoUpload photos={photos} onPhotosChange={setPhotos} />
+      <PhotoUpload photos={photos} onPhotosChange={setPhotos} onPhotoUploaded={handlePhotoUploaded} />
 
       {/* Labels */}
       <LabelInput labels={labels} onLabelsChange={setLabels} />

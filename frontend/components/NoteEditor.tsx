@@ -43,9 +43,10 @@ const FloatImage = Image.extend({
 interface NoteEditorProps {
   content: string;
   onChange: (html: string) => void;
+  onEditorReady?: (editor: ReturnType<typeof useEditor>) => void;
 }
 
-export default function NoteEditor({ content, onChange }: NoteEditorProps) {
+export default function NoteEditor({ content, onChange, onEditorReady }: NoteEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -58,6 +59,11 @@ export default function NoteEditor({ content, onChange }: NoteEditorProps) {
     content,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+    },
+    onCreate: ({ editor }) => {
+      if (onEditorReady) {
+        onEditorReady(editor);
+      }
     },
   });
 

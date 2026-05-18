@@ -5,6 +5,7 @@ import { useEffect, useCallback, useState } from "react";
 interface LightboxPhoto {
   cdn_url: string;
   position: number;
+  title?: string;
 }
 
 interface LightboxProps {
@@ -108,13 +109,22 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
         </svg>
       </button>
 
-      {/* Photo */}
-      <img
-        src={currentPhoto.cdn_url}
-        alt={`Photo ${currentIndex + 1} of ${photos.length}`}
-        className="max-h-[90vh] max-w-[90vw] object-contain"
+      {/* Photo and title */}
+      <div
+        className="flex flex-col items-center max-h-[90vh] max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
-      />
+      >
+        <img
+          src={currentPhoto.cdn_url}
+          alt={currentPhoto.title || `Photo ${currentIndex + 1} of ${photos.length}`}
+          className="max-h-[85vh] max-w-[90vw] object-contain"
+        />
+        {currentPhoto.title && (
+          <p className="mt-2 text-white text-center text-sm sm:text-base">
+            {currentPhoto.title}
+          </p>
+        )}
+      </div>
 
       {/* Next button */}
       <button

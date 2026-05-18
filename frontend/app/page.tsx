@@ -19,10 +19,15 @@ export default function HomePage() {
           </p>
         </Link>
 
-        <div className="block p-4 rounded-lg border border-violet-200 bg-violet-50">
-          <h2 className="text-lg font-semibold text-gray-400">Emi&apos;s Art</h2>
-          <p className="text-sm text-gray-400 mt-1">Coming soon</p>
-        </div>
+        <Link
+          href="/art"
+          className="block p-4 rounded-lg border border-violet-200 bg-violet-50 hover:border-violet-300 hover:shadow-sm transition-all"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Emi&apos;s Art</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Drawings, paintings, and creative adventures
+          </p>
+        </Link>
 
         <Link
           href="/trips"

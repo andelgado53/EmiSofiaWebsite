@@ -141,3 +141,22 @@ class TripPhoto(Base):
 
     # Relationships
     trip: Mapped["Trip"] = relationship("Trip", back_populates="photos")
+
+
+class ArtPiece(Base):
+    __tablename__ = "art_pieces"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    s3_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    cdn_url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(10), nullable=False, default="draft")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_now, onupdate=_now
+    )

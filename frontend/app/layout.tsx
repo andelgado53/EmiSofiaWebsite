@@ -29,9 +29,12 @@ export default function RootLayout({
             >
               Notes for Emi
             </Link>
-            <span className="text-gray-300 cursor-default px-2.5 py-1" title="Coming soon">
+            <Link
+              href="/art"
+              className="text-violet-700 hover:text-violet-900 font-medium px-2.5 py-1 rounded-full hover:bg-violet-50 transition-colors"
+            >
               Emi&apos;s Art
-            </span>
+            </Link>
             <Link
               href="/trips"
               className="text-emerald-700 hover:text-emerald-900 font-medium px-2.5 py-1 rounded-full hover:bg-emerald-50 transition-colors"

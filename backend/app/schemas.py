@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -268,3 +268,94 @@ class TripUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
     status: Literal["draft", "published"] | None = None
     photos: list[TripPhotoIn] | None = Field(default=None, max_length=20)
+
+
+# ---------------------------------------------------------------------------
+# Art piece schemas
+# ---------------------------------------------------------------------------
+
+
+class ArtPieceCreate(BaseModel):
+    """Payload for creating a new art piece via the CMS."""
+
+    year: int = Field(ge=2020)
+    s3_key: str
+    cdn_url: str
+    title: str | None = Field(default=None, max_length=200)
+
+    @field_validator("year")
+    @classmethod
+    def year_not_in_future(cls, v: int) -> int:
+        current_year = datetime.now().year
+        if v > current_year:
+            raise ValueError(
+                f"Year must be between 2020 and {current_year} (inclusive)"
+            )
+        return v
+
+
+class ArtPieceUpdate(BaseModel):
+    """Payload for updating an existing art piece via the CMS.
+
+    All fields are optional; only supplied fields are applied.
+    """
+
+    title: str | None = Field(default=None, max_length=200)
+    status: Literal["draft", "published"] | None = None
+
+
+class ArtPieceBulkReorder(BaseModel):
+    """Payload for reordering art pieces within a year."""
+
+    year: int = Field(ge=2020)
+    order: list[int] = Field(min_length=1)
+
+    @field_validator("year")
+    @classmethod
+    def year_not_in_future(cls, v: int) -> int:
+        current_year = datetime.now().year
+        if v > current_year:
+            raise ValueError(
+                f"Year must be between 2020 and {current_year} (inclusive)"
+            )
+        return v
+
+
+class ArtPieceOut(BaseModel):
+    """Public representation of an art piece."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    cdn_url: str
+    title: str | None = None
+    position: int
+
+
+class CmsArtPieceOut(BaseModel):
+    """CMS representation of an art piece (includes s3_key, status)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    year: int
+    s3_key: str
+    cdn_url: str
+    title: str | None = None
+    position: int
+    status: str
+
+
+class YearSummary(BaseModel):
+    """Year list item for the public year list endpoint."""
+
+    year: int
+    cover_photo_url: str | None = None
+    count: int
+
+
+class CmsYearGroup(BaseModel):
+    """CMS year group containing all art pieces for a year."""
+
+    year: int
+    pieces: list[CmsArtPieceOut]

@@ -1,29 +1,40 @@
 #!/bin/sh
 set -e
 
-# If the database already has tables but Alembic has never been run
-# (no alembic_version table), stamp it at the last pre-video-upload migration
-# so that only new migrations are applied.
+# Ensure Alembic knows the current state of the database before running migrations.
+# This handles the case where tables were created by create_all() without Alembic tracking.
 python -c "
 from app.database import engine
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 
 insp = inspect(engine)
 tables = insp.get_table_names()
 
-if 'alembic_version' not in tables and 'labels' in tables:
-    # DB was created by create_all(), not by Alembic.
-    # Check if media_type column already exists (migration already applied manually).
-    cols = [c['name'] for c in insp.get_columns('trip_photos')] if 'trip_photos' in tables else []
-    if 'media_type' in cols:
-        # All migrations are already applied
-        stamp_rev = 'e5f7a3c82d91'
+# If the DB has our app tables but Alembic thinks it needs to start from scratch,
+# we need to stamp it at the right revision.
+if 'labels' in tables:
+    # Check current alembic version
+    current_rev = None
+    if 'alembic_version' in tables:
+        with engine.connect() as conn:
+            result = conn.execute(text('SELECT version_num FROM alembic_version'))
+            row = result.fetchone()
+            current_rev = row[0] if row else None
+
+    if current_rev is None:
+        # Alembic has no record — stamp at the right point
+        cols = [c['name'] for c in insp.get_columns('trip_photos')] if 'trip_photos' in tables else []
+        if 'media_type' in cols:
+            stamp_rev = 'e5f7a3c82d91'
+        else:
+            stamp_rev = 'd8a4e2b19c73'
+        import subprocess
+        subprocess.run(['alembic', 'stamp', stamp_rev], check=True)
+        print(f'Stamped alembic_version at {stamp_rev}')
     else:
-        # Tables exist but media_type migration hasn't run yet
-        stamp_rev = 'd8a4e2b19c73'
-    import subprocess
-    subprocess.run(['alembic', 'stamp', stamp_rev], check=True)
-    print(f'Stamped alembic_version at {stamp_rev}')
+        print(f'Alembic already at revision: {current_rev}')
+else:
+    print('Fresh database — alembic upgrade will create all tables')
 "
 
 # Now run any pending migrations

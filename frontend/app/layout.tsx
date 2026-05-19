@@ -41,6 +41,12 @@ export default function RootLayout({
             >
               Family Trips
             </Link>
+            <Link
+              href="/moments"
+              className="text-pink-700 hover:text-pink-900 font-medium px-2.5 py-1 rounded-full hover:bg-pink-50 transition-colors"
+            >
+              Emi&apos;s Big Moments
+            </Link>
           </div>
         </nav>
         <main className="mx-auto max-w-3xl px-6 py-8">{children}</main>

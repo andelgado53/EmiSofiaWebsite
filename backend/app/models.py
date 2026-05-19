@@ -143,6 +143,48 @@ class TripPhoto(Base):
     trip: Mapped["Trip"] = relationship("Trip", back_populates="photos")
 
 
+class Moment(Base):
+    __tablename__ = "moments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(150), nullable=False)
+    moment_date: Mapped[date] = mapped_column(Date, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(10), nullable=False, default="draft")
+    published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_now
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_now, onupdate=_now
+    )
+
+    # Relationships
+    photos: Mapped[list["MomentPhoto"]] = relationship(
+        "MomentPhoto", back_populates="moment", cascade="all, delete-orphan"
+    )
+
+
+class MomentPhoto(Base):
+    __tablename__ = "moment_photos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    moment_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("moments.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    s3_key: Mapped[str] = mapped_column(String(512), nullable=False)
+    cdn_url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=_now
+    )
+
+    # Relationships
+    moment: Mapped["Moment"] = relationship("Moment", back_populates="photos")
+
+
 class ArtPiece(Base):
     __tablename__ = "art_pieces"
 

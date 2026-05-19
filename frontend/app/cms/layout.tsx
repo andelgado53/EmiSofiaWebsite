@@ -71,6 +71,12 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
           >
             Art
           </Link>
+          <Link
+            href="/cms/moments"
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            Moments
+          </Link>
         </nav>
         <button
           onClick={handleLogout}

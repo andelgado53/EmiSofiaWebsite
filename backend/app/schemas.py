@@ -359,3 +359,114 @@ class CmsYearGroup(BaseModel):
 
     year: int
     pieces: list[CmsArtPieceOut]
+
+
+# ---------------------------------------------------------------------------
+# Moment nested schemas
+# ---------------------------------------------------------------------------
+
+
+class MomentPhotoIn(BaseModel):
+    """CMS input schema for a moment photo reference (after S3 upload)."""
+
+    s3_key: str
+    cdn_url: str
+    position: int = Field(ge=1, le=2)
+
+
+class MomentPhotoOut(BaseModel):
+    """Public representation of a photo attached to a moment."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    cdn_url: str
+    position: int
+
+
+class CmsMomentPhotoOut(BaseModel):
+    """CMS representation of a moment photo (includes s3_key for edit forms)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    s3_key: str
+    cdn_url: str
+    position: int
+
+
+# ---------------------------------------------------------------------------
+# Moment public response schemas
+# ---------------------------------------------------------------------------
+
+
+class MomentListItem(BaseModel):
+    """Compact moment representation used in paginated list responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    moment_date: date
+    cover_photo_url: str | None = None
+
+
+class MomentDetail(BaseModel):
+    """Full moment representation returned by the single-moment public endpoint."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    moment_date: date
+    description: str
+    photos: list[MomentPhotoOut]
+
+
+class CmsMomentDetail(BaseModel):
+    """Full moment representation for CMS endpoints (includes drafts)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    moment_date: date
+    description: str
+    status: str
+    published_at: datetime | None = None
+    photos: list[CmsMomentPhotoOut]
+
+
+class PaginatedMoments(BaseModel):
+    """Wrapper for paginated moment list responses."""
+
+    total: int
+    page: int
+    page_size: int
+    items: list[MomentListItem]
+
+
+# ---------------------------------------------------------------------------
+# Moment CMS request schemas
+# ---------------------------------------------------------------------------
+
+
+class MomentCreate(BaseModel):
+    """Payload for creating a new moment via the CMS."""
+
+    title: str = Field(min_length=1, max_length=150)
+    moment_date: date
+    description: str = Field(min_length=1, max_length=2000)
+    status: Literal["draft", "published"] = "draft"
+    photos: list[MomentPhotoIn] = Field(default=[], max_length=2)
+
+
+class MomentUpdate(BaseModel):
+    """Payload for updating an existing moment via the CMS.
+
+    All fields are optional; only supplied fields are applied.
+    """
+
+    title: str | None = Field(default=None, min_length=1, max_length=150)
+    moment_date: date | None = None
+    description: str | None = Field(default=None, min_length=1, max_length=2000)
+    status: Literal["draft", "published"] | None = None
+    photos: list[MomentPhotoIn] | None = Field(default=None, max_length=2)

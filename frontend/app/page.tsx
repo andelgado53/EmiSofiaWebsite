@@ -38,6 +38,16 @@ export default function HomePage() {
             Photos and memories from our family adventures
           </p>
         </Link>
+
+        <Link
+          href="/moments"
+          className="block p-4 rounded-lg border border-rose-200 bg-rose-50 hover:border-rose-300 hover:shadow-sm transition-all"
+        >
+          <h2 className="text-lg font-semibold text-gray-900">Emi&apos;s Big Moments</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Milestones, firsts, and unforgettable memories
+          </p>
+        </Link>
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import VideoPlayer from "@/components/VideoPlayer";
 
 interface MomentPhoto {
   cdn_url: string;
   position: number;
+  media_type: string;
 }
 
 interface MomentDetail {
@@ -78,14 +80,23 @@ export default async function MomentDetailPage({
 
       {sortedPhotos.length > 0 && (
         <div className="space-y-6">
-          {sortedPhotos.map((photo, index) => (
-            <img
-              key={photo.cdn_url}
-              src={photo.cdn_url}
-              alt={`${moment.title} photo ${index + 1}`}
-              className="w-full h-auto rounded-md"
-            />
-          ))}
+          {sortedPhotos.map((photo, index) =>
+            photo.media_type === "video" ? (
+              <VideoPlayer
+                key={photo.cdn_url}
+                src={photo.cdn_url}
+                alt={`${moment.title} video ${index + 1}`}
+                className="w-full h-auto rounded-md"
+              />
+            ) : (
+              <img
+                key={photo.cdn_url}
+                src={photo.cdn_url}
+                alt={`${moment.title} photo ${index + 1}`}
+                className="w-full h-auto rounded-md"
+              />
+            )
+          )}
         </div>
       )}
     </article>

@@ -96,7 +96,7 @@ def get_trip(
         trip_date=trip.trip_date,
         description=trip.description,
         photos=[
-            TripPhotoOut(cdn_url=p.cdn_url, position=p.position)
+            TripPhotoOut(cdn_url=p.cdn_url, position=p.position, media_type=p.media_type)
             for p in sorted_photos
         ],
     )

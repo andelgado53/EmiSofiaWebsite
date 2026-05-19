@@ -18,8 +18,16 @@ interface CmsYearGroup {
   pieces: CmsArtPiece[];
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+const MAX_FILE_SIZE_PHOTO = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE_VIDEO = 100 * 1024 * 1024; // 100 MB
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "video/mp4", "video/webm"];
+const EXT_TO_CONTENT_TYPE: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  mp4: "video/mp4",
+  webm: "video/webm",
+};
 const MAX_TITLE_LENGTH = 200;
 
 function getCurrentYear(): number {
@@ -102,14 +110,21 @@ export default function CmsArtPage() {
 
   // --- Upload ---
 
-  function validateFile(file: File): string | null {
-    let valid = ALLOWED_TYPES.includes(file.type);
-    if (!valid && file.name) {
-      const ext = file.name.toLowerCase().split(".").pop() || "";
-      valid = ["jpg", "jpeg", "png"].includes(ext);
+  function resolveContentType(file: File): string | null {
+    if (file.type && ALLOWED_TYPES.includes(file.type)) {
+      return file.type;
     }
-    if (!valid) return "Only JPEG and PNG files are accepted.";
-    if (file.size > MAX_FILE_SIZE) return "File size must be 10 MB or less.";
+    const ext = file.name.toLowerCase().split(".").pop() || "";
+    return EXT_TO_CONTENT_TYPE[ext] || null;
+  }
+
+  function validateFile(file: File): string | null {
+    if (file.size === 0) return "File is empty.";
+    const contentType = resolveContentType(file);
+    if (!contentType) return "Only JPEG, PNG, MP4, and WebM files are accepted.";
+    const isVideo = contentType.startsWith("video/");
+    if (isVideo && file.size > MAX_FILE_SIZE_VIDEO) return "Video file size must be 100 MB or less.";
+    if (!isVideo && file.size > MAX_FILE_SIZE_PHOTO) return "Photo file size must be 10 MB or less.";
     return null;
   }
 
@@ -151,9 +166,13 @@ export default function CmsArtPage() {
     setUploadError("");
 
     try {
+      // Resolve content type for the file
+      const contentType = resolveContentType(file) || file.type || "image/jpeg";
+      const mediaType = contentType.startsWith("video/") ? "video" : "photo";
+
       // Step 1: Get presigned URL
       const presignRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/cms/photos/presign`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/cms/media/presign`,
         {
           method: "POST",
           headers: {
@@ -162,7 +181,7 @@ export default function CmsArtPage() {
           },
           body: JSON.stringify({
             filename: file.name,
-            content_type: file.type || "image/jpeg",
+            content_type: contentType,
           }),
         }
       );
@@ -183,7 +202,7 @@ export default function CmsArtPage() {
       // Step 2: Upload to S3
       const uploadRes = await fetch(upload_url, {
         method: "PUT",
-        headers: { "Content-Type": file.type || "image/jpeg" },
+        headers: { "Content-Type": contentType },
         body: file,
       });
 
@@ -204,6 +223,7 @@ export default function CmsArtPage() {
             year: newYear,
             s3_key,
             cdn_url,
+            media_type: mediaType,
           }),
         }
       );
@@ -499,7 +519,7 @@ export default function CmsArtPage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+              accept="image/jpeg,image/png,video/mp4,video/webm,.jpg,.jpeg,.png,.mp4,.webm"
               onChange={handleFileSelect}
               disabled={uploading}
               className="hidden"
@@ -511,9 +531,9 @@ export default function CmsArtPage() {
               disabled={uploading}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {uploading ? "Uploading..." : "Upload Image"}
+              {uploading ? "Uploading..." : "Upload Media"}
             </button>
-            <p className="mt-1 text-xs text-gray-500">JPEG or PNG, up to 10 MB</p>
+            <p className="mt-1 text-xs text-gray-500">JPEG, PNG, MP4, or WebM. Photos up to 10 MB, videos up to 100 MB.</p>
           </div>
         </div>
         {uploadError && (

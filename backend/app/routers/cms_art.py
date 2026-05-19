@@ -54,6 +54,7 @@ def _art_piece_to_cms_out(piece: ArtPiece) -> CmsArtPieceOut:
         cdn_url=piece.cdn_url,
         title=piece.title,
         position=piece.position,
+        media_type=piece.media_type,
         status=piece.status,
     )
 
@@ -118,6 +119,7 @@ def create_art_piece(
         s3_key=body.s3_key,
         cdn_url=body.cdn_url,
         position=next_position,
+        media_type=body.media_type,
         status="draft",
     )
     db.add(art_piece)

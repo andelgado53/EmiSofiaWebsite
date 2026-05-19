@@ -102,6 +102,7 @@ def get_year_gallery(
             cdn_url=p.cdn_url,
             title=p.title,
             position=p.position,
+            media_type=p.media_type,
         )
         for p in pieces
     ]

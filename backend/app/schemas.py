@@ -170,6 +170,7 @@ class TripPhotoIn(BaseModel):
     s3_key: str
     cdn_url: str
     position: int = Field(ge=1, le=20)
+    media_type: Literal["photo", "video"] = "photo"
 
 
 class TripPhotoOut(BaseModel):
@@ -179,6 +180,7 @@ class TripPhotoOut(BaseModel):
 
     cdn_url: str
     position: int
+    media_type: str = "photo"
 
 
 class CmsTripPhotoOut(BaseModel):
@@ -189,6 +191,7 @@ class CmsTripPhotoOut(BaseModel):
     s3_key: str
     cdn_url: str
     position: int
+    media_type: str = "photo"
 
 
 # ---------------------------------------------------------------------------
@@ -282,6 +285,7 @@ class ArtPieceCreate(BaseModel):
     s3_key: str
     cdn_url: str
     title: str | None = Field(default=None, max_length=200)
+    media_type: Literal["photo", "video"] = "photo"
 
     @field_validator("year")
     @classmethod
@@ -330,6 +334,7 @@ class ArtPieceOut(BaseModel):
     cdn_url: str
     title: str | None = None
     position: int
+    media_type: str = "photo"
 
 
 class CmsArtPieceOut(BaseModel):
@@ -343,6 +348,7 @@ class CmsArtPieceOut(BaseModel):
     cdn_url: str
     title: str | None = None
     position: int
+    media_type: str = "photo"
     status: str
 
 
@@ -372,6 +378,7 @@ class MomentPhotoIn(BaseModel):
     s3_key: str
     cdn_url: str
     position: int = Field(ge=1, le=2)
+    media_type: Literal["photo", "video"] = "photo"
 
 
 class MomentPhotoOut(BaseModel):
@@ -381,6 +388,7 @@ class MomentPhotoOut(BaseModel):
 
     cdn_url: str
     position: int
+    media_type: str = "photo"
 
 
 class CmsMomentPhotoOut(BaseModel):
@@ -391,6 +399,7 @@ class CmsMomentPhotoOut(BaseModel):
     s3_key: str
     cdn_url: str
     position: int
+    media_type: str = "photo"
 
 
 # ---------------------------------------------------------------------------

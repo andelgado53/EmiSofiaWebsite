@@ -6,6 +6,7 @@ interface ArtPiece {
   cdn_url: string;
   title: string | null;
   position: number;
+  media_type: string;
 }
 
 export const revalidate = 60;

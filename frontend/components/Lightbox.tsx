@@ -6,6 +6,7 @@ interface LightboxPhoto {
   cdn_url: string;
   position: number;
   title?: string;
+  media_type?: string;
 }
 
 interface LightboxProps {
@@ -109,16 +110,27 @@ export default function Lightbox({ photos, initialIndex, onClose }: LightboxProp
         </svg>
       </button>
 
-      {/* Photo and title */}
+      {/* Photo/Video and title */}
       <div
         className="flex flex-col items-center max-h-[90vh] max-w-[90vw]"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={currentPhoto.cdn_url}
-          alt={currentPhoto.title || `Photo ${currentIndex + 1} of ${photos.length}`}
-          className="max-h-[85vh] max-w-[90vw] object-contain"
-        />
+        {currentPhoto.media_type === "video" ? (
+          <video
+            src={currentPhoto.cdn_url}
+            controls
+            className="max-h-[85vh] max-w-[90vw] object-contain"
+            aria-label={currentPhoto.title || `Video ${currentIndex + 1} of ${photos.length}`}
+          >
+            Your browser does not support the video element.
+          </video>
+        ) : (
+          <img
+            src={currentPhoto.cdn_url}
+            alt={currentPhoto.title || `Photo ${currentIndex + 1} of ${photos.length}`}
+            className="max-h-[85vh] max-w-[90vw] object-contain"
+          />
+        )}
         {currentPhoto.title && (
           <p className="mt-2 text-white text-center text-sm sm:text-base">
             {currentPhoto.title}

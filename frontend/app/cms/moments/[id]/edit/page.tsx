@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import MomentForm, { MomentFormData, MomentPhotoData } from "@/components/MomentForm";
+import MomentForm, { MomentFormData } from "@/components/MomentForm";
+import { MediaData } from "@/components/MediaUpload";
 
 interface CmsMomentPhoto {
   s3_key: string;
   cdn_url: string;
   position: number;
+  media_type?: "photo" | "video";
 }
 
 interface CmsMomentDetailResponse {
@@ -180,10 +182,11 @@ export default function EditMomentPage() {
         moment_date: momentData.moment_date,
         description: momentData.description,
         status: momentData.status,
-        photos: momentData.photos.map((p): MomentPhotoData => ({
+        photos: momentData.photos.map((p): MediaData => ({
           s3_key: p.s3_key,
           cdn_url: p.cdn_url,
           position: p.position,
+          media_type: p.media_type || "photo",
         })),
       }
     : undefined;

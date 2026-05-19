@@ -96,7 +96,7 @@ def get_moment(
         moment_date=moment.moment_date,
         description=moment.description,
         photos=[
-            MomentPhotoOut(cdn_url=p.cdn_url, position=p.position)
+            MomentPhotoOut(cdn_url=p.cdn_url, position=p.position, media_type=p.media_type)
             for p in sorted_photos
         ],
     )

@@ -41,7 +41,7 @@ def _delete_s3_key(s3_client, key: str) -> None:
 def _moment_to_cms_detail(moment: Moment) -> CmsMomentDetail:
     """Convert a Moment ORM instance to a CmsMomentDetail response."""
     photos_out = sorted(
-        [CmsMomentPhotoOut(s3_key=p.s3_key, cdn_url=p.cdn_url, position=p.position) for p in moment.photos],
+        [CmsMomentPhotoOut(s3_key=p.s3_key, cdn_url=p.cdn_url, position=p.position, media_type=p.media_type) for p in moment.photos],
         key=lambda p: p.position,
     )
     return CmsMomentDetail(
@@ -97,6 +97,7 @@ def create_moment(
             s3_key=photo_in.s3_key,
             cdn_url=photo_in.cdn_url,
             position=photo_in.position,
+            media_type=photo_in.media_type,
         )
         db.add(photo)
 
@@ -222,6 +223,7 @@ def update_moment(
                 s3_key=photo_in.s3_key,
                 cdn_url=photo_in.cdn_url,
                 position=idx,
+                media_type=photo_in.media_type,
             )
             db.add(photo)
 

@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import TripForm, { TripFormData, TripPhotoData } from "@/components/TripForm";
+import TripForm, { TripFormData } from "@/components/TripForm";
+import { MediaData } from "@/components/MediaUpload";
 
 interface CmsTripPhoto {
   s3_key: string;
   cdn_url: string;
   position: number;
+  media_type?: "photo" | "video";
 }
 
 interface CmsTripDetailResponse {
@@ -180,10 +182,11 @@ export default function EditTripPage() {
         trip_date: tripData.trip_date,
         description: tripData.description ?? "",
         status: tripData.status,
-        photos: tripData.photos.map((p): TripPhotoData => ({
+        photos: tripData.photos.map((p): MediaData => ({
           s3_key: p.s3_key,
           cdn_url: p.cdn_url,
           position: p.position,
+          media_type: p.media_type || "photo",
         })),
       }
     : undefined;

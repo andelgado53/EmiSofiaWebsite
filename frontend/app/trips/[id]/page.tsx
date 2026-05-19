@@ -4,6 +4,7 @@ import PhotoGallery from "@/components/PhotoGallery";
 interface TripPhoto {
   cdn_url: string;
   position: number;
+  media_type?: string;
 }
 
 interface TripDetail {

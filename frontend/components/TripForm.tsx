@@ -1,20 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import PhotoUploader from "@/components/PhotoUploader";
-
-export interface TripPhotoData {
-  s3_key: string;
-  cdn_url: string;
-  position: number;
-}
+import MediaUpload, { MediaData } from "@/components/MediaUpload";
 
 export interface TripFormData {
   title: string;
   trip_date: string;
   description: string;
   status: "draft" | "published";
-  photos: TripPhotoData[];
+  photos: MediaData[];
 }
 
 interface TripFormProps {
@@ -24,7 +18,7 @@ interface TripFormProps {
     trip_date: string;
     description: string;
     status: "draft" | "published";
-    photos: TripPhotoData[];
+    photos: MediaData[];
   };
   onSubmit: (data: TripFormData) => Promise<void>;
 }
@@ -37,7 +31,7 @@ export default function TripForm({ mode, initialData, onSubmit }: TripFormProps)
   const [tripDate, setTripDate] = useState(initialData?.trip_date ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [status, setStatus] = useState<"draft" | "published">(initialData?.status ?? "draft");
-  const [photos, setPhotos] = useState<TripPhotoData[]>(initialData?.photos ?? []);
+  const [media, setMedia] = useState<MediaData[]>(initialData?.photos ?? []);
 
   const [titleError, setTitleError] = useState("");
   const [dateError, setDateError] = useState("");
@@ -90,7 +84,7 @@ export default function TripForm({ mode, initialData, onSubmit }: TripFormProps)
         trip_date: tripDate,
         description: description.trim(),
         status: targetStatus,
-        photos,
+        photos: media,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save trip. Please try again.";
@@ -217,8 +211,8 @@ export default function TripForm({ mode, initialData, onSubmit }: TripFormProps)
         </select>
       </div>
 
-      {/* Photos */}
-      <PhotoUploader photos={photos} onPhotosChange={setPhotos} />
+      {/* Media */}
+      <MediaUpload media={media} onMediaChange={setMedia} maxItems={20} />
 
       {/* Action buttons */}
       <div className="flex gap-3 pt-4 border-t border-gray-200">

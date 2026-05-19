@@ -240,3 +240,31 @@ class TestGetYearGallery:
         response = client.get("/api/art/years/2024")
         data = response.json()
         assert data[0]["title"] is None
+
+    def test_piece_includes_media_type_default_photo(self, client, db):
+        _create_art_piece(db, year=2024, position=1, status="published")
+
+        response = client.get("/api/art/years/2024")
+        data = response.json()
+        assert data[0]["media_type"] == "photo"
+
+    def test_piece_includes_media_type_video(self, client, db):
+        now = datetime.now(timezone.utc)
+        piece = ArtPiece(
+            year=2024,
+            title="Video Art",
+            s3_key="videos/2024/piece_1.mp4",
+            cdn_url="https://cdn.example.com/videos/2024/piece_1.mp4",
+            position=1,
+            media_type="video",
+            status="published",
+            published_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(piece)
+        db.commit()
+
+        response = client.get("/api/art/years/2024")
+        data = response.json()
+        assert data[0]["media_type"] == "video"

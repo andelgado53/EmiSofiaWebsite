@@ -135,6 +135,9 @@ class TripPhoto(Base):
     s3_key: Mapped[str] = mapped_column(String(512), nullable=False)
     cdn_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
+    media_type: Mapped[str] = mapped_column(
+        String(10), nullable=False, server_default="photo"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=_now
     )
@@ -177,6 +180,9 @@ class MomentPhoto(Base):
     s3_key: Mapped[str] = mapped_column(String(512), nullable=False)
     cdn_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
+    media_type: Mapped[str] = mapped_column(
+        String(10), nullable=False, server_default="photo"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, default=_now
     )
@@ -194,6 +200,9 @@ class ArtPiece(Base):
     s3_key: Mapped[str] = mapped_column(String(512), nullable=False)
     cdn_url: Mapped[str] = mapped_column(String(1024), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
+    media_type: Mapped[str] = mapped_column(
+        String(10), nullable=False, server_default="photo"
+    )
     status: Mapped[str] = mapped_column(String(10), nullable=False, default="draft")
     published_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

@@ -41,7 +41,7 @@ def _delete_s3_key(s3_client, key: str) -> None:
 def _trip_to_cms_detail(trip: Trip) -> CmsTripDetail:
     """Convert a Trip ORM instance to a CmsTripDetail response."""
     photos_out = sorted(
-        [CmsTripPhotoOut(s3_key=p.s3_key, cdn_url=p.cdn_url, position=p.position) for p in trip.photos],
+        [CmsTripPhotoOut(s3_key=p.s3_key, cdn_url=p.cdn_url, position=p.position, media_type=p.media_type) for p in trip.photos],
         key=lambda p: p.position,
     )
     return CmsTripDetail(
@@ -96,6 +96,7 @@ def create_trip(
             s3_key=photo_in.s3_key,
             cdn_url=photo_in.cdn_url,
             position=photo_in.position,
+            media_type=photo_in.media_type,
         )
         db.add(photo)
 
@@ -220,6 +221,7 @@ def update_trip(
                 s3_key=photo_in.s3_key,
                 cdn_url=photo_in.cdn_url,
                 position=photo_in.position,
+                media_type=photo_in.media_type,
             )
             db.add(photo)
 

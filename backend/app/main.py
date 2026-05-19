@@ -7,6 +7,7 @@ from app.config import settings
 from app.database import Base, engine
 from app.routers import auth as auth_router
 from app.routers import cms_art as cms_art_router
+from app.routers import cms_media as cms_media_router
 from app.routers import cms_notes as cms_notes_router
 from app.routers import cms_photos as cms_photos_router
 from app.routers import cms_moments as cms_moments_router
@@ -38,6 +39,7 @@ app.add_middleware(
 # Routers
 app.include_router(auth_router.router)
 app.include_router(cms_art_router.router)
+app.include_router(cms_media_router.router)
 app.include_router(cms_notes_router.router)
 app.include_router(cms_photos_router.router)
 app.include_router(cms_moments_router.router)
